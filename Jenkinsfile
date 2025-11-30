@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_REPO = “technologyvikasmudrist/test-image-guvi"
+        DOCKERHUB_REPO = "technologyvikasmudrist/test-image-guvi"
     }
 
     stages {
