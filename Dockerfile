@@ -1,34 +1,20 @@
+# Use official Ubuntu base image
 FROM ubuntu:22.04
 
-# Run the following commands as super user (root):
-USER root
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install required packages for notebooks
-RUN apt-get update && apt-get install -y python-pip && pip install --upgrade pip && pip install \
-       jupyter \
-       metakernel \
-       zmq \
-     && rm -rf /var/lib/apt/lists/*
+# Update package list and install Apache
+RUN apt-get update && \
+    apt-get install -y apache2 && \
+    apt-get clean
 
-# Create a user that does not have root privileges 
-ARG username=physicist
-RUN userdel builder && useradd --create-home --home-dir /home/${username} ${username}
-ENV HOME /home/${username}
+# Enable SSL module (optional if using HTTPS later)
+RUN a2enmod ssl
 
-WORKDIR /home/${username}
+# Expose ports
+EXPOSE 80
+EXPOSE 443
 
-# Add some example notebooks
-#ADD http://root.cern.ch/doc/master/notebooks/mp201_parallelHistoFill.C.nbconvert.ipynb mp201_parallelHistoFill.C.nbconvert.ipynb
-#ADD http://root.cern.ch/doc/master/notebooks/tdf007_snapshot.py.nbconvert.ipynb tdf007_snapshot.py.nbconvert.ipynb
-
-# Create the configuration file for jupyter and set owner
-#RUN echo "c.NotebookApp.ip = '*'" > jupyter_notebook_config.py && chown ${username} *
-
-# Switch to our newly created user
-USER ${username}
-
-# Allow incoming connections on port 8888
-EXPOSE 8888
-
-# Start ROOT with the --notebook flag to fire up the container
-CMD ["root", "--notebook"]
+# Start Apache in foreground
+CMD ["/usr/sbin/apache2ctl", "-D", "FOREGROUND"]
